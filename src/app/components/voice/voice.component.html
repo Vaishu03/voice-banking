@@ -1,0 +1,69 @@
+<div class="yono-container">
+
+  <!-- 🔷 Header -->
+  <div class="yono-header">
+    <h2>YONO Voice Banking</h2>
+    <span class="subtitle">Speak to perform banking actions</span>
+  </div>
+
+  <!-- 🎤 Voice Section -->
+  <div class="voice-section">
+
+    <button ejs-speechtotext #speechToText cssClass="e-primary mic-button"
+      [buttonSettings]="{ iconCss: 'e-icons e-mic-icon' }" (transcriptChanged)="onTranscriptChange($event)"
+      (onStart)="onListeningStart()" (onStop)="onListeningStop($event)" (onError)="onErrorHandler($event)">
+    </button>
+
+    <p class="status-text">
+      {{ listening ? '🎙 Listening...' : 'Tap mic to speak' }}
+    </p>
+
+  </div>
+
+  <!-- 💬 Chat Output -->
+  <div class="chat-container">
+    <h4>Conversation</h4>
+
+    <div class="chat-box">
+      <div class="user-msg">
+        {{ liveTranscript || 'Your speech will appear here...' }}
+      </div>
+    </div>
+
+    <div class="chat-actions">
+      <button class="e-btn" (click)="copyTranscript()" [disabled]="!liveTranscript">
+        {{ copyButtonText }}
+      </button>
+      <button class="e-btn" (click)="clearTranscript()">Clear</button>
+    </div>
+  </div>
+
+  <!-- ⚡ Quick Banking Actions -->
+  <div class="quick-actions">
+    <h5>Quick Actions</h5>
+    <button class="action-btn">Check Balance</button>
+    <button class="action-btn">Mini Statement</button>
+    <button class="action-btn">Transfer Money</button>
+  </div>
+
+</div>
+
+<!-- ⚙️ Properties Panel (UNCHANGED functionality) -->
+<div class="property-panel">
+  <h4>Settings</h4>
+
+  <label>Mic Color</label>
+  <ejs-dropdownlist (change)="onMicColorChange($event)" [dataSource]='colorsData' [fields]='fields'>
+  </ejs-dropdownlist>
+
+  <label>Language</label>
+  <ejs-dropdownlist (change)="onLanguageChange($event)" value="en-US" [dataSource]='languageData' [fields]='fields'>
+  </ejs-dropdownlist>
+
+  <label>Interim Results</label>
+  <ejs-switch checked="true" (change)="toggleInterimResults($event)"></ejs-switch>
+
+  <label>Tooltip</label>
+  <ejs-switch checked="true" (change)="toggleTooltip($event)"></ejs-switch>
+
+</div>

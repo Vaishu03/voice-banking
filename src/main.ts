@@ -1,7 +1,7 @@
-import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+import { bootstrapApplication } from '@angular/platform-browser';
+import { AppComponent } from './app/app.component';
+import { registerLicense } from '@syncfusion/ej2-base';
 
-import { AppModule } from './app/app.module';
-
-
-platformBrowserDynamic().bootstrapModule(AppModule)
-  .catch(err => console.error(err));
+registerLicense('Ngo9BigBOggjHTQxAR8/V1JHaF5cWWdCekx0TXxbf1x2ZFZMY1xbQH9PMyBoS35RcEVgW3Zec3dVQ2ReVkZyVEFe');
+ 
+bootstrapApplication(AppComponent);
