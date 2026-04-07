@@ -6,27 +6,48 @@
     <span class="subtitle">Speak to perform banking actions</span>
   </div>
 
+  <div class="property-panel">
+    <!-- <h4>Settings</h4> -->
+  
+    <label>Language</label>
+    <ejs-dropdownlist (change)="onLanguageChange($event)" [dataSource]="languageData" [fields]="fields" [(value)] = "selectedLanguage">
+    </ejs-dropdownlist>
+  
+  </div> 
+
   <!-- 🎤 Voice Section -->
   <div class="voice-section">
 
-    <button ejs-speechtotext #speechToText cssClass="e-primary mic-button"
-      [buttonSettings]="{ iconCss: 'e-icons e-mic-icon' }" (transcriptChanged)="onTranscriptChange($event)"
-      (onStart)="onListeningStart()" (onStop)="onListeningStop($event)" (onError)="onErrorHandler($event)">
+    <button ejs-speechtotext #speechToText class="mic-button" cssClass="e-primary" [lang]="selectedLanguage"
+      [allowInterimResults]="true" [showTooltip]="true" [buttonSettings]="{ iconCss: 'e-icons e-mic-icon' }"
+      (transcriptChanged)="onTranscriptChange($event)" (start)="onListeningStart()"
+      (stop)="onListeningStop($any($event))" (error)="onErrorHandler($any($event))">
     </button>
 
     <p class="status-text">
       {{ listening ? '🎙 Listening...' : 'Tap mic to speak' }}
     </p>
 
+    <p *ngIf="isSpeaking">🔊 Speaking...</p>
+
   </div>
 
   <!-- 💬 Chat Output -->
   <div class="chat-container">
+    <!-- <label>Selected Language: {{ selectedLanguage }}</label> -->
     <h4>Conversation</h4>
 
     <div class="chat-box">
-      <div class="user-msg">
-        {{ liveTranscript || 'Your speech will appear here...' }}
+      <div *ngFor="let msg of messages">
+        
+        <div *ngIf="msg.sender === 'user'" class="user-msg">
+          User: {{ msg.text }}
+        </div>
+    
+        <div *ngIf="msg.sender === 'bot'" class="bot-msg">
+          Response 🤖: {{ msg.text }}
+        </div>
+    
       </div>
     </div>
 
@@ -41,29 +62,19 @@
   <!-- ⚡ Quick Banking Actions -->
   <div class="quick-actions">
     <h5>Quick Actions</h5>
-    <button class="action-btn">Check Balance</button>
-    <button class="action-btn">Mini Statement</button>
-    <button class="action-btn">Transfer Money</button>
+    <button class="action-btn" (click)="triggerAction('balance')">Check Balance</button>
+    <button class="action-btn" (click)="triggerAction('statement')">Last Five transactions</button>
+    <button class="action-btn" (click)="triggerAction('transfer')">Credit card details</button>
   </div>
 
 </div>
 
-<!-- ⚙️ Properties Panel (UNCHANGED functionality) -->
-<div class="property-panel">
+<!-- ⚙️ Settings -->
+<!-- <div class="property-panel">
   <h4>Settings</h4>
 
-  <label>Mic Color</label>
-  <ejs-dropdownlist (change)="onMicColorChange($event)" [dataSource]='colorsData' [fields]='fields'>
-  </ejs-dropdownlist>
-
   <label>Language</label>
-  <ejs-dropdownlist (change)="onLanguageChange($event)" value="en-US" [dataSource]='languageData' [fields]='fields'>
+  <ejs-dropdownlist (change)="onLanguageChange($event)" [dataSource]="languageData" [fields]="fields" value="en-IN">
   </ejs-dropdownlist>
 
-  <label>Interim Results</label>
-  <ejs-switch checked="true" (change)="toggleInterimResults($event)"></ejs-switch>
-
-  <label>Tooltip</label>
-  <ejs-switch checked="true" (change)="toggleTooltip($event)"></ejs-switch>
-
-</div>
+</div> -->
