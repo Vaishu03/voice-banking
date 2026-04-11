@@ -22,9 +22,9 @@ export class LoginComponent {
     ) { }
 
   login() {
-    if ((this.username === 'Raj Kumar' && this.password === 'Raj@1234') 
+    if ((this.username === 'RajKumar' && this.password === 'Raj@1234') 
     || (this.username === 'Vaishnavi' && this.password === 'Vaish@1234') 
-    || (this.username === 'New Customer' && this.password === 'Cust@1234')) {
+    || (this.username === 'NewCustomer' && this.password === 'Cust@1234')) {
 
       const loginData = {
         username: this.username,
