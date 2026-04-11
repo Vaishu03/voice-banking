@@ -6,7 +6,7 @@ import { VoiceRecognitionService } from 'src/app/services/voice.service';
 import { CommonModule } from '@angular/common';
 import { DatePipe } from '@angular/common';
 import { Router } from '@angular/router';
-import { lastValueFrom } from 'rxjs';
+import { forkJoin } from 'rxjs';
 
 @Component({
     selector: 'app-voice',
@@ -40,6 +40,7 @@ export class VoiceComponent implements OnInit {
     statusText: string = 'Tap mic to speak';
     messages: { sender: 'user' | 'bot', text: string }[] = [];
     lastProcessedtext: string = '';
+    isMicActive = true;
 
     userData = localStorage.getItem('loggedInUser');
 
@@ -205,12 +206,34 @@ export class VoiceComponent implements OnInit {
     speak(text: string, lang: string) {
         // console.log("Speaking")
 
+        if (this.speechToText) {
+            try {
+                this.speechToText.stopListening();
+            } catch (e) { }
+        }
+
+        this.isMicActive = false;
+
         speechSynthesis.cancel();
 
         const utterance = new SpeechSynthesisUtterance(text);
 
         this.isSpeaking = true;
 
+        const voices = speechSynthesis.getVoices();
+
+        // speechSynthesis.getVoices().forEach(v => {
+        //     console.log(v.lang, v.name);
+        // });
+
+        // 🎯 Try to find matching voice
+        const selectedVoice = voices.find(v => v.lang === lang);
+
+        if (selectedVoice) {
+            utterance.voice = selectedVoice;
+        } else {
+            console.warn("Voice not available for:", lang);
+        }
         utterance.lang = lang;
 
         // 🎧 Make it softer
@@ -220,9 +243,15 @@ export class VoiceComponent implements OnInit {
 
         utterance.onend = () => {
             this.isSpeaking = false
-            // this.onListeningStart(); 
+            setTimeout(() => {
+                this.isMicActive = true;
+            }, 300);
         };
-        utterance.onerror = () => this.isSpeaking = false;
+
+        utterance.onerror = () => {
+            this.isSpeaking = false;
+            this.isMicActive = true;
+        };
 
         speechSynthesis.speak(utterance);
     }
@@ -254,7 +283,7 @@ export class VoiceComponent implements OnInit {
             balance: [
                 'balance', 'bal', 'amount', 'rupees',
                 'बैलेंस', 'पैसे', 'धन', // Hindi
-                'బ్యాలెన్స్', 'డబ్బులు', 'నిల్వ', // Telugu
+                'బ్యాలెన్స్', 'డబ్బులు', 'నిల్వ','బాలన్స్', // Telugu
                 'மீதி', 'பணம்', 'எவ்வளவு', // Tamil
                 'शिल्लक', 'पैसे', 'किती', 'बॅलन्स' // Marathi
             ],
@@ -287,7 +316,7 @@ export class VoiceComponent implements OnInit {
                 'इंटरनेट बँकिंग', 'नेट बँकिंग' // Marathi
             ],
             aadhar: [
-                'aadhar', 'uidai', 'link aadhar', 'aadhar card', 
+                'aadhar', 'uidai', 'link aadhar', 'aadhar card',
                 'आधार', 'आधार कार्ड', 'आधार लिंक', // Hindi
                 'ఆధార్', 'ఆధార్ కార్డ్', 'ఆధార్ లింక్', // Telugu
                 'ஆதார்', 'ஆதார் கார்டு', 'இணைப்பு', // Tamil
@@ -303,9 +332,9 @@ export class VoiceComponent implements OnInit {
             nominee: [
                 'nominee', 'heir', 'nomination', 'beneficiary', 'add nominee',
                 'नॉमिनी', 'नामांकन', 'वारिस', 'नामिती', // Hindi
-                'నామినీ','నామినేషన్','లబ్ధిదారుడు', // Telugu
+                'నామినీ', 'నామినేషన్', 'లబ్ధిదారుడు', // Telugu
                 'நாமினி', 'பயனாளரி', 'நியமனம்', // Tamil
-                'नामांकन','लाभार्थी', 'नॉमिनी ' // Marathi
+                'नामांकन', 'लाभार्थी', 'नॉमिनी ' // Marathi
             ]
         };
 
@@ -346,28 +375,28 @@ export class VoiceComponent implements OnInit {
                         });
                     }
                     else if (this.selectedLanguage === 'te-IN') {
-                        responseText = speakText =  'మీ ఖాతా బ్యాలెన్స్:';
+                        responseText = speakText = 'మీ ఖాతా బ్యాలెన్స్:';
                         data.forEach((val: any) => {
                             speakText += `${getSpacedDigits(val.acno)} తో ముగిసే మీ ఖాతాలో ${val.balance} రూపాయల నిల్వ ఉంది. `;
                             responseText += `\n${val.acno}: ${val.balance}`;
                         });
                     }
                     else if (this.selectedLanguage === 'ta-IN') {
-                        responseText = speakText =  'உங்கள் கணக்கு இருப்பு:';
+                        responseText = speakText = 'உங்கள் கணக்கு இருப்பு:';
                         data.forEach((val: any) => {
                             speakText += `${getSpacedDigits(val.acno)} என்று முடியும் உங்கள் கணக்கில் ${val.balance} ரூபாய் உள்ளது. `;
                             responseText += `\n${val.acno}: ${val.balance}`;
                         });
                     }
                     else if (this.selectedLanguage === 'mr-IN') {
-                        responseText = speakText =  'तुमच्या खात्यातील शिल्लक:';
+                        responseText = speakText = 'तुमच्या खात्यातील शिल्लक:';
                         data.forEach((val: any) => {
                             speakText += `तुमच्या शेवटी ${getSpacedDigits(val.acno)} असलेल्या खात्यात ${val.balance} रुपये शिल्लक आहेत. `;
                             responseText += `\n${val.acno}: ${val.balance}`;
                         });
                     }
                     else {
-                        responseText =  'Your account balance is:';
+                        responseText = 'Your account balance is:';
                         data.forEach((val: any) => {
                             speakText += `Your account ending with ${getSpacedDigits(val.acno)} has a balance of ${val.balance} Rupees. `;
                             responseText += `\n${val.acno}: ${val.balance}`;
@@ -467,118 +496,118 @@ export class VoiceComponent implements OnInit {
         else if (isnominee) {
             this.voiceservice.api_nominee(this.cif).subscribe({
                 next: (res: any) => {
+
                     const data = dataparse(res);
-                    if (this.selectedLanguage === 'hi-IN') {
-                        data.forEach((txn: any) => {
-                            if (txn.nomineeFacility === 'Y') {
+
+                    const nomineeCalls: any[] = [];
+
+                    // 🔹 First loop → prepare base text + collect API calls
+                    data.forEach((txn: any) => {
+
+                        if (txn.nomineeFacility === 'Y') {
+
+                            nomineeCalls.push(this.voiceservice.api_nomineeDetails(this.cif));
+
+                            if (this.selectedLanguage === 'hi-IN') {
                                 responseText += `आपके खाता संख्या ${txn.acno} में नामांकित व्यक्ति (नॉमिनी) का विवरण है।\n\n`;
                                 speakText += `आपके अंत में ${getSpacedCard(txn.acno)} वाले खाते में नॉमिनी का विवरण उपलब्ध है। `;
-                                
-                                this.voiceservice.api_nomineeDetails(this.cif).subscribe({
-                                    next: (resl: any) => {
-                                        const subdata = typeof resl === 'string' ? JSON.parse(resl) : resl;
-                                        subdata.forEach((new_txn: any) => {
-                                            responseText += `नाम: ${new_txn.nomineename}, संबंध: ${new_txn.nomineerelation}, हिस्सा: ${new_txn.nomineeshare}%\n\n`;
-                                            speakText += `नॉमिनी का नाम ${new_txn.nomineename} है, वे आपके ${new_txn.nomineerelation} हैं और उनका हिस्सा ${new_txn.nomineeshare} प्रतिशत है। `;
-                                        });
-                                    }
-                                });
-                            } else {
+                            }
+                            else if (this.selectedLanguage === 'te-IN') {
+                                responseText += `మీ ఖాతా సంఖ్య ${txn.acno} లో నామినీ వివరాలు ఉన్నాయి.\n\n`;
+                                speakText += `${getSpacedCard(txn.acno)} తో ముగిసే మీ ఖాతాలో నామినీ వివరాలు ఉన్నాయి. `;
+                            }
+                            else if (this.selectedLanguage === 'ta-IN') {
+                                responseText += `உங்கள் கணக்கு எண் ${txn.acno} வாரிசுதாரர் (நாமிணி) விவரங்களைக் கொண்டுள்ளது.\n\n`;
+                                speakText += `${getSpacedCard(txn.acno)} என முடியும் உங்கள் கணக்கில் நாமிணி விவரங்கள் உள்ளன. `;
+                            }
+                            else if (this.selectedLanguage === 'mr-IN') {
+                                responseText += `तुमच्या खाते क्रमांक ${txn.acno} मध्ये वारसदार (नॉमिनी) तपशील आहेत.\n\n`;
+                                speakText += `तुमच्या शेवटी ${getSpacedCard(txn.acno)} असलेल्या खात्यात नॉमिनी तपशील उपलब्ध आहेत. `;
+                            }
+                            else {
+                                responseText += `Your account number ${txn.acno} has nominee details.\n\n`;
+                                speakText += `Your account ending with ${getSpacedCard(txn.acno)} has nominee details. `;
+                            }
+
+                        } else {
+
+                            // ❌ No nominee
+                            if (this.selectedLanguage === 'hi-IN') {
                                 responseText += `आपके खाता संख्या ${txn.acno} में नॉमिनी का विवरण नहीं है।\n\n`;
                                 speakText += `आपके अंत में ${getSpacedCard(txn.acno)} वाले खाते में नॉमिनी का विवरण नहीं है। `;
                             }
-                        });
-                    } 
-                    else if (this.selectedLanguage === 'te-IN') {
-                        data.forEach((txn: any) => {
-                            if (txn.nomineeFacility === 'Y') {
-                                responseText += `మీ ఖాతా సంఖ్య ${txn.acno} లో నామినీ వివరాలు ఉన్నాయి.\n\n`;
-                                speakText += `${getSpacedCard(txn.acno)} తో ముగిసే మీ ఖాతాలో నామినీ వివరాలు ఉన్నాయి. `;
-                                
-                                this.voiceservice.api_nomineeDetails(this.cif).subscribe({
-                                    next: (resl: any) => {
-                                        const subdata = typeof resl === 'string' ? JSON.parse(resl) : resl;
-                                        subdata.forEach((new_txn: any) => {
-                                            responseText += `నామినీ పేరు: ${new_txn.nomineename}, సంబంధం: ${new_txn.nomineerelation}, వాటా: ${new_txn.nomineeshare}%\n\n`;
-                                            speakText += `నామినీ పేరు ${new_txn.nomineename}, వారు మీకు ${new_txn.nomineerelation} అవుతారు మరియు వారి వాటా ${new_txn.nomineeshare} శాతం. `;
-                                        });
-                                    }
-                                });
-                            } else {
+                            else if (this.selectedLanguage === 'te-IN') {
                                 responseText += `మీ ఖాతా సంఖ్య ${txn.acno} లో నామినీ వివరాలు లేవు.\n\n`;
                                 speakText += `${getSpacedCard(txn.acno)} తో ముగిసే మీ ఖాతాలో నామినీ వివరాలు లేవు. `;
                             }
-                        });
-                    }
-                    else if (this.selectedLanguage === 'ta-IN') {
-                        data.forEach((txn: any) => {
-                            if (txn.nomineeFacility === 'Y') {
-                                responseText += `உங்கள் கணக்கு எண் ${txn.acno} வாரிசுதாரர் (நாமிணி) விவரங்களைக் கொண்டுள்ளது.\n\n`;
-                                speakText += `${getSpacedCard(txn.acno)} என முடியும் உங்கள் கணக்கில் நாமிணி விவரங்கள் உள்ளன. `;
-                                
-                                this.voiceservice.api_nomineeDetails(this.cif).subscribe({
-                                    next: (resl: any) => {
-                                        const subdata = typeof resl === 'string' ? JSON.parse(resl) : resl;
-                                        subdata.forEach((new_txn: any) => {
-                                            responseText += `பெயர்: ${new_txn.nomineename}, உறவு: ${new_txn.nomineerelation}, பங்கு: ${new_txn.nomineeshare}%\n\n`;
-                                            speakText += `நாமிணியின் பெயர் ${new_txn.nomineename}, உறவு ${new_txn.nomineerelation} மற்றும் அவர்களின் பங்கு ${new_txn.nomineeshare} சதவீதம். `;
-                                        });
-                                    }
-                                });
-                            } else {
+                            else if (this.selectedLanguage === 'ta-IN') {
                                 responseText += `உங்கள் கணக்கு எண் ${txn.acno} இல் நாமிணி விவரங்கள் இல்லை.\n\n`;
                                 speakText += `${getSpacedCard(txn.acno)} என முடியும் உங்கள் கணக்கில் நாமிணி விவரங்கள் இல்லை. `;
                             }
-                        });
-                    }
-                    else if (this.selectedLanguage === 'mr-IN') {
-                        data.forEach((txn: any) => {
-                            if (txn.nomineeFacility === 'Y') {
-                                responseText += `तुमच्या खाते क्रमांक ${txn.acno} मध्ये वारसदार (नॉमिनी) तपशील आहेत.\n\n`;
-                                speakText += `तुमच्या शेवटी ${getSpacedCard(txn.acno)} असलेल्या खात्यात नॉमिनी तपशील उपलब्ध आहेत. `;
-                                
-                                this.voiceservice.api_nomineeDetails(this.cif).subscribe({
-                                    next: (resl: any) => {
-                                        const subdata = typeof resl === 'string' ? JSON.parse(resl) : resl;
-                                        subdata.forEach((new_txn: any) => {
-                                            responseText += `नाव: ${new_txn.nomineename}, नाते: ${new_txn.nomineerelation}, हिस्सा: ${new_txn.nomineeshare}%\n\n`;
-                                            speakText += `नॉमिनीचे नाव ${new_txn.nomineename} आहे, ते तुमचे ${new_txn.nomineerelation} आहेत आणि त्यांचा हिस्सा ${new_txn.nomineeshare} टक्के आहे. `;
-                                        });
-                                    }
-                                });
-                            } else {
+                            else if (this.selectedLanguage === 'mr-IN') {
                                 responseText += `तुमच्या खाते क्रमांक ${txn.acno} मध्ये नॉमिनी तपशील नाहीत.\n\n`;
                                 speakText += `तुमच्या शेवटी ${getSpacedCard(txn.acno)} असलेल्या खात्यात नॉमिनी तपशील नाहीत. `;
                             }
-                        });
-                    }
-                    else {
-                        // Default English
-                        data.forEach((txn: any) => {
-                            if (txn.nomineeFacility === 'Y') {
-                                responseText += `Your account number ${txn.acno} has nominee details.\n\n`;
-                                speakText += `Your account ending with ${getSpacedCard(txn.acno)} has nominee details. `;
-                                
-                                this.voiceservice.api_nomineeDetails(this.cif).subscribe({
-                                    next: (resl: any) => {
-                                        const subdata = typeof resl === 'string' ? JSON.parse(resl) : resl;
-                                        subdata.forEach((new_txn: any) => {
-                                            responseText += `Nominee: ${new_txn.nomineename}, Relation: ${new_txn.nomineerelation}, Share: ${new_txn.nomineeshare}%\n\n`;
-                                            speakText += `Nominee name is ${new_txn.nomineename}, relation is ${new_txn.nomineerelation} and their share is ${new_txn.nomineeshare} percent. `;
-                                        });
-                                    }
-                                });
-                            } else {
+                            else {
                                 responseText += `Your account ${txn.acno} does not have nominee details.\n\n`;
                                 speakText += `Your account ending with ${getSpacedCard(txn.acno)} does not have nominee details. `;
                             }
-                        });
+                        }
+                    });
+
+                    // ✅ If no nominee API calls → directly show
+                    if (nomineeCalls.length === 0) {
+                        this.messages.push({ sender: 'bot', text: responseText });
+                        this.speak(speakText, this.selectedLanguage);
+                        responseText = '';
+                        speakText = '';
+                        return;
                     }
 
-                    this.messages.push({ sender: 'bot', text: responseText });
-                    this.speak(speakText, this.selectedLanguage);
-                    responseText = ''
-                    speakText = ''
+                    // 🔥 Execute all nominee detail APIs
+                    forkJoin(nomineeCalls).subscribe({
+                        next: (results: any[]) => {
+
+                            results.forEach((resl: any) => {
+
+                                const subdata = typeof resl === 'string' ? JSON.parse(resl) : resl;
+
+                                subdata.forEach((new_txn: any) => {
+
+                                    if (this.selectedLanguage === 'hi-IN') {
+                                        responseText += `नाम: ${new_txn.nomineename}, संबंध: ${new_txn.nomineerelation}, हिस्सा: ${new_txn.nomineeshare}%\n\n`;
+                                        speakText += `नॉमिनी का नाम ${new_txn.nomineename} है, वे आपके ${new_txn.nomineerelation} हैं और उनका हिस्सा ${new_txn.nomineeshare} प्रतिशत है। `;
+                                    }
+                                    else if (this.selectedLanguage === 'te-IN') {
+                                        responseText += `నామినీ పేరు: ${new_txn.nomineename}, సంబంధం: ${new_txn.nomineerelation}, వాటా: ${new_txn.nomineeshare}%\n\n`;
+                                        speakText += `నామినీ పేరు ${new_txn.nomineename}, వారు మీకు ${new_txn.nomineerelation} అవుతారు మరియు వారి వాటా ${new_txn.nomineeshare} శాతం. `;
+                                    }
+                                    else if (this.selectedLanguage === 'ta-IN') {
+                                        responseText += `பெயர்: ${new_txn.nomineename}, உறவு: ${new_txn.nomineerelation}, பங்கு: ${new_txn.nomineeshare}%\n\n`;
+                                        speakText += `நாமிணியின் பெயர் ${new_txn.nomineename}, உறவு ${new_txn.nomineerelation} மற்றும் அவர்களின் பங்கு ${new_txn.nomineeshare} சதவீதம். `;
+                                    }
+                                    else if (this.selectedLanguage === 'mr-IN') {
+                                        responseText += `नाव: ${new_txn.nomineename}, नाते: ${new_txn.nomineerelation}, हिस्सा: ${new_txn.nomineeshare}%\n\n`;
+                                        speakText += `नॉमिनीचे नाव ${new_txn.nomineename} आहे, ते तुमचे ${new_txn.nomineerelation} आहेत आणि त्यांचा हिस्सा ${new_txn.nomineeshare} टक्के आहे. `;
+                                    }
+                                    else {
+                                        responseText += `Nominee: ${new_txn.nomineename}, Relation: ${new_txn.nomineerelation}, Share: ${new_txn.nomineeshare}%\n\n`;
+                                        speakText += `Nominee name is ${new_txn.nomineename}, relation is ${new_txn.nomineerelation} and their share is ${new_txn.nomineeshare} percent. `;
+                                    }
+
+                                });
+                            });
+
+                            // ✅ FINAL UPDATE AFTER ALL CALLS
+                            this.messages.push({ sender: 'bot', text: responseText });
+                            this.speak(speakText, this.selectedLanguage);
+
+                            responseText = '';
+                            speakText = '';
+                        },
+                        error: (err) => console.error(err)
+                    });
+
                 },
                 error: (err) => console.error(err)
             });
@@ -659,121 +688,117 @@ export class VoiceComponent implements OnInit {
                 next: (res: any) => {
                     const data = dataparse(res);
 
-                    if (this.selectedLanguage === 'hi-IN') {
-                        data.forEach((txn: any) => {
-                            if (txn.debitCard === 'Y') {
+                    const debitCardCalls: any[] = [];
+                    const debitAccounts: any[] = [];
+
+                    // First loop → prepare base text + collect API calls
+                    data.forEach((txn: any) => {
+
+                        if (txn.debitCard === 'Y') {
+                            debitAccounts.push(txn);
+                            debitCardCalls.push(this.voiceservice.api_debitcard(this.cif));
+
+                            // Language-specific base messages
+                            if (this.selectedLanguage === 'hi-IN') {
                                 responseText += `आपके खाता संख्या ${txn.acno} में डेबिट कार्ड सक्रिय है।\n\n`;
                                 speakText += `आपके अंत में ${getSpacedCard(txn.acno)} वाले खाते में डेबिट कार्ड सक्रिय है। `;
-                                
-                                this.voiceservice.api_debitcard(this.cif).subscribe({
-                                    next: (resl: any) => {
-                                        const subdata = typeof resl === 'string' ? JSON.parse(resl) : resl;
-                                        subdata.forEach((new_txn: any) => {
-                                            responseText += `आपका डेबिट कार्ड ${new_txn.cardnumber}, ${formatDate(new_txn.validtill)} तक मान्य है।\n\n`;
-                                            speakText += `आपका डेबिट कार्ड जिसके अंत में ${getSpacedCard(new_txn.cardnumber)} है, वह ${formatDate(new_txn.validtill)} तक मान्य है। `;
-                                        });
-                                    }
-                                });
-                            } else {
-                                responseText += `आपके खाते ${txn.acno} में डेबit कार्ड की सुविधा उपलब्ध नहीं है।\n\n`;
-                                speakText += `आपके अंत में ${getSpacedCard(txn.acno)} वाले खाते में डेबिट कार्ड की सुविधा उपलब्ध नहीं है। `;
                             }
-                        });
-                    } 
-                    else if (this.selectedLanguage === 'te-IN') {
-                        data.forEach((txn: any) => {
-                            if (txn.debitCard === 'Y') {
+                            else if (this.selectedLanguage === 'te-IN') {
                                 responseText += `మీ ఖాతా సంఖ్య ${txn.acno} కు యాక్టివ్ డెబిట్ కార్డ్ ఉంది.\n\n`;
                                 speakText += `${getSpacedCard(txn.acno)} తో ముగిసే మీ ఖాతాకు డెబిట్ కార్డ్ ఉంది. `;
-                                
-                                this.voiceservice.api_debitcard(this.cif).subscribe({
-                                    next: (resl: any) => {
-                                        const subdata = typeof resl === 'string' ? JSON.parse(resl) : resl;
-                                        subdata.forEach((new_txn: any) => {
-                                            responseText += `మీ డెబిట్ కార్డ్ ${new_txn.cardnumber}, ${formatDate(new_txn.validtill)} వరకు చెల్లుబాటు అవుతుంది.\n\n`;
-                                            speakText += `${getSpacedCard(new_txn.cardnumber)} తో ముగిసే మీ డెబిట్ కార్డ్ ${formatDate(new_txn.validtill)} వరకు చెల్లుబాటు అవుతుంది. `;
-                                        });
-                                    }
-                                });
-                            } else {
+                            }
+                            else if (this.selectedLanguage === 'ta-IN') {
+                                responseText += `உங்கள் கணக்கு எண் ${txn.acno} செயலில் உள்ள டெபிட் கார்டைக் கொண்டுள்ளது.\n\n`;
+                                speakText += `${getSpacedCard(txn.acno)} என முடியும் உங்கள் கணக்கில் டெபிட் கார்டு செயல்பாட்டில் உள்ளது. `;
+                            }
+                            else if (this.selectedLanguage === 'mr-IN') {
+                                responseText += `तुमच्या खाते क्रमांक ${txn.acno} मध्ये सक्रिय डेबिट कार्ड आहे.\n\n`;
+                                speakText += `तुमच्या शेवटी ${getSpacedCard(txn.acno)} असलेल्या खात्यात सक्रिय डेबिट कार्ड आहे. `;
+                            }
+                            else {
+                                responseText += `Your account number ${txn.acno} has an active debit card.\n\n`;
+                                speakText += `Your account number ending with ${getSpacedCard(txn.acno)} has an active debit card. `;
+                            }
+
+                        } else {
+                            // No debit card case
+                            if (this.selectedLanguage === 'hi-IN') {
+                                responseText += `आपके खाते ${txn.acno} में डेबिट कार्ड की सुविधा उपलब्ध नहीं है।\n\n`;
+                                speakText += `आपके अंत में ${getSpacedCard(txn.acno)} वाले खाते में डेबिट कार्ड की सुविधा उपलब्ध नहीं है। `;
+                            }
+                            else if (this.selectedLanguage === 'te-IN') {
                                 responseText += `మీ ఖాతా ${txn.acno} కు డెబిట్ కార్డ్ సౌకర్యం లేదు.\n\n`;
                                 speakText += `${getSpacedCard(txn.acno)} తో ముగిసే మీ ఖాతాకు డెబిట్ కార్డ్ సౌకర్యం లేదు. `;
                             }
-                        });
-                    }
-                    else if (this.selectedLanguage === 'ta-IN') {
-                        data.forEach((txn: any) => {
-                            if (txn.debitCard === 'Y') {
-                                responseText += `உங்கள் கணக்கு எண் ${txn.acno} செயலில் உள்ள டெபிட் கார்டைக் கொண்டுள்ளது.\n\n`;
-                                speakText += `${getSpacedCard(txn.acno)} என முடியும் உங்கள் கணக்கில் டெபிட் கார்டு செயல்பாட்டில் உள்ளது. `;
-                                
-                                this.voiceservice.api_debitcard(this.cif).subscribe({
-                                    next: (resl: any) => {
-                                        const subdata = typeof resl === 'string' ? JSON.parse(resl) : resl;
-                                        subdata.forEach((new_txn: any) => {
-                                            responseText += `உங்கள் டெபிட் கார்டு ${new_txn.cardnumber}, ${formatDate(new_txn.validtill)} வரை செல்லும்.\n\n`;
-                                            speakText += `${getSpacedCard(new_txn.cardnumber)} என முடியும் உங்கள் டெபிட் கார்டு ${formatDate(new_txn.validtill)} வரை செல்லும். `;
-                                        });
-                                    }
-                                });
-                            } else {
+                            else if (this.selectedLanguage === 'ta-IN') {
                                 responseText += `உங்கள் கணக்கு ${txn.acno} டெபிட் கார்டு வசதியைப் பெறவில்லை.\n\n`;
                                 speakText += `${getSpacedCard(txn.acno)} என முடியும் உங்கள் கணக்கில் டெபிட் கார்டு வசதி இல்லை. `;
                             }
-                        });
-                    }
-                    else if (this.selectedLanguage === 'mr-IN') {
-                        data.forEach((txn: any) => {
-                            if (txn.debitCard === 'Y') {
-                                responseText += `तुमच्या खाते क्रमांक ${txn.acno} मध्ये सक्रिय डेबिट कार्ड आहे.\n\n`;
-                                speakText += `तुमच्या शेवटी ${getSpacedCard(txn.acno)} असलेल्या खात्यात सक्रिय डेबिट कार्ड आहे. `;
-                                
-                                this.voiceservice.api_debitcard(this.cif).subscribe({
-                                    next: (resl: any) => {
-                                        const subdata = typeof resl === 'string' ? JSON.parse(resl) : resl;
-                                        subdata.forEach((new_txn: any) => {
-                                            responseText += `तुमचे डेबिट कार्ड ${new_txn.cardnumber}, ${formatDate(new_txn.validtill)} पर्यंत वैध आहे.\n\n`;
-                                            speakText += `तुमचे डेबिट कार्ड ज्याच्या शेवटी ${getSpacedCard(new_txn.cardnumber)} आहे, ते ${formatDate(new_txn.validtill)} पर्यंत वैध आहे. `;
-                                        });
-                                    }
-                                });
-                            } else {
+                            else if (this.selectedLanguage === 'mr-IN') {
                                 responseText += `तुमच्या खात्यात ${txn.acno} डेबिट कार्ड सुविधा उपलब्ध नाही.\n\n`;
                                 speakText += `तुमच्या शेवटी ${getSpacedCard(txn.acno)} असलेल्या खात्यात डेबिट कार्ड सुविधा उपलब्ध नाही. `;
                             }
-                        });
-                    }
-                    else {
-                        // Default English
-                        data.forEach((txn: any) => {
-                            if (txn.debitCard === 'Y') {
-                                responseText += `Your account number ${txn.acno} has an active debit card.\n\n`;
-                                speakText += `Your account number ending with ${getSpacedCard(txn.acno)} has an active debit card.`;
-                                
-                                this.voiceservice.api_debitcard(this.cif).subscribe({
-                                    next: (resl: any) => {
-                                        const subdata = typeof resl === 'string' ? JSON.parse(resl) : resl;
-                                        subdata.forEach((new_txn: any) => {
-                                            console.log(new_txn);
-                                            responseText += `Your debit card ${new_txn.cardnumber} is valid till ${formatDate(new_txn.validtill)}\n\n`;
-                                            speakText += `Your debit card ending with ${getSpacedCard(new_txn.cardnumber)} is valid till ${formatDate(new_txn.validtill)}. `;
-                                        });
-                                    }
-                                });
-                            } else {
+                            else {
                                 responseText += `Your account ${txn.acno} has not availed debit card facility.\n\n`;
                                 speakText += `Your account ending with ${getSpacedCard(txn.acno)} has not availed debit card facility. `;
                             }
-                        });
+                        }
+                    });
+
+                    // ✅ If no debit card API calls → directly update UI
+                    if (debitCardCalls.length === 0) {
+                        this.messages.push({ sender: 'bot', text: responseText });
+                        this.speak(speakText, this.selectedLanguage);
+                        responseText = '';
+                        speakText = '';
+                        return;
                     }
 
-                    this.messages.push({ sender: 'bot', text: responseText });
-                    this.speak(speakText, this.selectedLanguage);
-                    responseText = ''
-                    speakText = ''
+                    // ✅ Execute all API calls together
+                    forkJoin(debitCardCalls).subscribe({
+                        next: (results: any[]) => {
+
+                            results.forEach((resl: any) => {
+                                const subdata = typeof resl === 'string' ? JSON.parse(resl) : resl;
+
+                                subdata.forEach((new_txn: any) => {
+
+                                    if (this.selectedLanguage === 'hi-IN') {
+                                        responseText += `आपका डेबिट कार्ड ${new_txn.cardnumber}, ${formatDate(new_txn.validtill)} तक मान्य है।\n\n`;
+                                        speakText += `आपका डेबिट कार्ड जिसके अंत में ${getSpacedCard(new_txn.cardnumber)} है, वह ${formatDate(new_txn.validtill)} तक मान्य है। `;
+                                    }
+                                    else if (this.selectedLanguage === 'te-IN') {
+                                        responseText += `మీ డెబిట్ కార్డ్ ${new_txn.cardnumber}, ${formatDate(new_txn.validtill)} వరకు చెల్లుబాటు అవుతుంది.\n\n`;
+                                        speakText += `${getSpacedCard(new_txn.cardnumber)} తో ముగిసే మీ డెబిట్ కార్డ్ ${formatDate(new_txn.validtill)} వరకు చెల్లుబాటు అవుతుంది. `;
+                                    }
+                                    else if (this.selectedLanguage === 'ta-IN') {
+                                        responseText += `உங்கள் டெபிட் கார்டு ${new_txn.cardnumber}, ${formatDate(new_txn.validtill)} வரை செல்லும்.\n\n`;
+                                        speakText += `${getSpacedCard(new_txn.cardnumber)} என முடியும் உங்கள் டெபிட் கார்டு ${formatDate(new_txn.validtill)} வரை செல்லும். `;
+                                    }
+                                    else if (this.selectedLanguage === 'mr-IN') {
+                                        responseText += `तुमचे डेबिट कार्ड ${new_txn.cardnumber}, ${formatDate(new_txn.validtill)} पर्यंत वैध आहे.\n\n`;
+                                        speakText += `तुमचे डेबिट कार्ड ज्याच्या शेवटी ${getSpacedCard(new_txn.cardnumber)} आहे, ते ${formatDate(new_txn.validtill)} पर्यंत वैध आहे. `;
+                                    }
+                                    else {
+                                        responseText += `Your debit card ${new_txn.cardnumber} is valid till ${formatDate(new_txn.validtill)}\n\n`;
+                                        speakText += `Your debit card ending with ${getSpacedCard(new_txn.cardnumber)} is valid till ${formatDate(new_txn.validtill)}. `;
+                                    }
+
+                                });
+                            });
+
+                            // ✅ FINAL UI UPDATE (after all APIs)
+                            this.messages.push({ sender: 'bot', text: responseText });
+                            this.speak(speakText, this.selectedLanguage);
+
+                            responseText = '';
+                            speakText = '';
+                        },
+                        error: (err) => console.error(err)
+                    });
                 },
                 error: (err) => console.error(err)
-            })
+            });
         }
 
         else if (isAadhar) {
@@ -973,7 +998,7 @@ export class VoiceComponent implements OnInit {
                                 responseText += `तुमच्या खाते क्रमांक ${txn.acno} चे KYC पूर्ण झाले आहे.`;
                                 speakText += `तुमच्या शेवटी ${getSpacedCard(txn.acno)} असलेल्या खात्याचे के वाई सी पूर्ण झाले आहे.`;
                             }
-                            else{
+                            else {
                                 responseText += `तुमच्या खात्याचे ${txn.acno} KYC पूर्ण झालेले नाही.`
                                 speakText += `तुमच्या शेवटी ${getSpacedCard(txn.acno)} असलेल्या खात्याचे के वाई सी पूर्ण झालेले नाही.`
                             }

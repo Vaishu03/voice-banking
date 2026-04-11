@@ -19,12 +19,13 @@
 
   <!-- 🎤 Voice Section -->
   <div class="voice-section">
-    <button ejs-speechtotext #speechToText class="mic-button" cssClass="e-primary" [lang]="selectedLanguage"
+    <button ejs-speechtotext  #speechToText class="mic-button" cssClass="e-primary" [lang]="selectedLanguage"
       [allowInterimResults]="true" [showTooltip]="true" [buttonSettings]="{ iconCss: 'e-icons e-mic-icon' }"
-      (transcriptChanged)="onTranscriptChange($event)" (start)="onListeningStart()" (stop)="onListeningStop()"
+      (transcriptChanged)="onTranscriptChange($event)" (start)="onListeningStart()" (stop)="onListeningStop()" 
+      [disabled]="isSpeaking"
       (error)="onErrorHandler($any($event))">
     </button>
-    <p class="status-text">
+    <p *ngIf="isMicActive" class="status-text">
       {{ statusText }}
     </p>
     <p *ngIf="isSpeaking">🔊 Speaking...</p>
