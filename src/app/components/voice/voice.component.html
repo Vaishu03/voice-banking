@@ -1,60 +1,50 @@
 <div class="yono-container">
-
   <!-- 🔷 Header -->
   <div class="yono-header">
-    <h2>YONO Voice Banking</h2>
-    <span class="subtitle">Speak to perform banking actions</span>
+    <div class="header-left">
+      <h2>YONO Voice Banking</h2>
+      <span class="subtitle">Speak to perform banking actions</span>
+    </div>
+    <button class="logout-btn" (click)="onLogout()" title="Logout">
+      <span class="e-icons e-export"></span>
+    </button>
   </div>
 
   <div class="property-panel">
-    <!-- <h4>Settings</h4> -->
-  
     <label>Language</label>
-    <ejs-dropdownlist (change)="onLanguageChange($event)" [dataSource]="languageData" [fields]="fields" [(value)] = "selectedLanguage">
+    <ejs-dropdownlist (change)="onLanguageChange($event)" [dataSource]="languageData" [fields]="fields"
+      [(value)]="selectedLanguage" placeholder="Select a Language">
     </ejs-dropdownlist>
-  
-  </div> 
+  </div>
 
   <!-- 🎤 Voice Section -->
   <div class="voice-section">
-
     <button ejs-speechtotext #speechToText class="mic-button" cssClass="e-primary" [lang]="selectedLanguage"
       [allowInterimResults]="true" [showTooltip]="true" [buttonSettings]="{ iconCss: 'e-icons e-mic-icon' }"
-      (transcriptChanged)="onTranscriptChange($event)" (start)="onListeningStart()"
-      (stop)="onListeningStop($any($event))" (error)="onErrorHandler($any($event))">
+      (transcriptChanged)="onTranscriptChange($event)" (start)="onListeningStart()" (stop)="onListeningStop()"
+      (error)="onErrorHandler($any($event))">
     </button>
-
     <p class="status-text">
-      {{ listening ? '🎙 Listening...' : 'Tap mic to speak' }}
+      {{ statusText }}
     </p>
-
     <p *ngIf="isSpeaking">🔊 Speaking...</p>
-
   </div>
 
   <!-- 💬 Chat Output -->
   <div class="chat-container">
-    <!-- <label>Selected Language: {{ selectedLanguage }}</label> -->
     <h4>Conversation</h4>
-
     <div class="chat-box">
       <div *ngFor="let msg of messages">
-        
         <div *ngIf="msg.sender === 'user'" class="user-msg">
           User: {{ msg.text }}
         </div>
-    
         <div *ngIf="msg.sender === 'bot'" class="bot-msg">
           Response 🤖: {{ msg.text }}
         </div>
-    
       </div>
     </div>
 
     <div class="chat-actions">
-      <button class="e-btn" (click)="copyTranscript()" [disabled]="!liveTranscript">
-        {{ copyButtonText }}
-      </button>
       <button class="e-btn" (click)="clearTranscript()">Clear</button>
     </div>
   </div>
@@ -64,17 +54,6 @@
     <h5>Quick Actions</h5>
     <button class="action-btn" (click)="triggerAction('balance')">Check Balance</button>
     <button class="action-btn" (click)="triggerAction('statement')">Last Five transactions</button>
-    <button class="action-btn" (click)="triggerAction('transfer')">Credit card details</button>
+    <button class="action-btn" (click)="triggerAction('creditcard')">Credit card details</button>
   </div>
-
 </div>
-
-<!-- ⚙️ Settings -->
-<!-- <div class="property-panel">
-  <h4>Settings</h4>
-
-  <label>Language</label>
-  <ejs-dropdownlist (change)="onLanguageChange($event)" [dataSource]="languageData" [fields]="fields" value="en-IN">
-  </ejs-dropdownlist>
-
-</div> -->

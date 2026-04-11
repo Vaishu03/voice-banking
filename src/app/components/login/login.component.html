@@ -1,0 +1,38 @@
+<div class="login-container">
+    <!-- 🔷 Header -->
+    <div class="login-header">
+      <h2>YONO Voice Banking</h2>
+      <p>Secure Login</p>
+    </div>
+   
+    <!-- 🧾 Login Card -->
+    <div class="login-card">
+   
+      <h3>Welcome Back 👋</h3>
+   
+      <!-- 👤 Username -->
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" [(ngModel)]="username" placeholder="Enter username">
+      </div>
+   
+      <!-- 🔒 Password -->
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" [(ngModel)]="password" placeholder="Enter password">
+      </div>
+   
+      <!-- 🔘 Login Button -->
+      <button class="login-btn" (click)="login()">Login</button>
+   
+      <!-- 🎤 Voice Login -->
+      <button class="voice-btn" (click)="voiceLogin()">
+        🎤 Login with Voice
+      </button>
+   
+      <!-- ❗ Error -->
+      <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+   
+    </div>
+   
+  </div>

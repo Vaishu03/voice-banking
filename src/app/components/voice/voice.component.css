@@ -21,10 +21,12 @@ body {
 
 /* 🔷 Header (YONO Style) */
 .yono-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     background: linear-gradient(135deg, #0a2a66, #1c3d8f);
     color: white;
-    padding: 20px;
-    text-align: center;
+    padding: 15px 20px;
 }
 
 .yono-header h2 {
@@ -126,6 +128,7 @@ body {
 
 .bot-msg {
     /* background: #e2ffe2; */
+    white-space: pre-line;
     padding: 10px;
     border-radius: 10px;
     margin: 5px;
@@ -159,4 +162,17 @@ body {
     background: white;
     padding: 15px;
     border-radius: 10px;
+}
+
+.logout-btn {
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.logout-btn:hover {
+    opacity: 0.7;
 }

@@ -57,29 +57,57 @@ export class VoiceRecognitionService {
     }
   }
 
-  api_balance(): Observable<any> {
-    // console.log("http", this.http);
-    return this.http.get(`/api/getbalance`, { responseType: 'text' });
+  login(userdata:any): Observable<any> {
+    return this.http.post('/api/login', userdata, {responseType: 'text'});
   }
 
-  api_statement(): Observable<any> {
+  api_balance(cif:any): Observable<any> {
     // console.log("http", this.http);
-    return this.http.get(`/api/statement`, { responseType: 'text' });
+    return this.http.get(`/api/getbalance/${cif}`, { responseType: 'text' });
+  }
+
+  api_getlastfivetransactions(cif:any): Observable<any> {
+    return this.http.get(`/api/getlastfivetransactions/${cif}`, { responseType: 'text' });
   }
 
   api_transfer(amount:any): Observable<any> {
-    // console.log("http", this.http);
     return this.http.post(`/api/transfer`, amount, { responseType: 'text' });
   }
 
   api_test(): Observable<any> {
-    // console.log("http", this.http);
     return this.http.get(`/api/voice`, { responseType: 'text' });
   }
 
-  api_credit(): Observable<any> {
-    // console.log("http", this.http);
-    return this.http.get(`/api/creditcarddetails`, { responseType: 'text' });
+  api_credit(cif:any): Observable<any> {
+    return this.http.get(`/api/getCreditcarddetails/${cif}`, { responseType: 'text' });
+  }
+
+  api_debit(cif:any): Observable<any> {
+    return this.http.get(`/api/debit_card_facility/${cif}`, { responseType: 'text' });
+  }
+
+  api_debitcard(cif:any): Observable<any> {
+    return this.http.get(`/api/debitcarddetails/${cif}`, { responseType: 'text' });
+  }
+
+  api_aadhar (cif:any): Observable<any> {
+    return this.http.get(`/api/aadhar_linkage/${cif}`, { responseType: 'text' });
+  }
+
+  api_kyc(cif:any): Observable<any> {
+    return this.http.get(`/api/kycEnquiry/${cif}`, { responseType: 'text' });
+  }
+
+  api_inb(cif:any): Observable<any> {
+    return this.http.get(`/api/inb_facility/${cif}`, { responseType: 'text' });
+  }
+
+  api_nominee(cif:any): Observable<any> {
+    return this.http.get(`/api/nomineefacility/${cif}`, { responseType: 'text' });
+  }
+
+  api_nomineeDetails(cif:any): Observable<any> {
+    return this.http.get(`/api/nomineedetails/${cif}`, { responseType: 'text' });
   }
  }
 
