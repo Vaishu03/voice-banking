@@ -289,14 +289,14 @@ export class VoiceComponent implements OnInit {
             ],
             statement: [
                 'statement', 'history', 'transactions', 'transaction', 'last five', 'mini statement',
-                'स्टेटमेंट', 'लेनदेन', 'विवरण', 'ट्रांजैक्शन', // Hindi
+                'स्टेटमेंट', 'लेनदेन', 'विवरण', 'ट्रांजैक्शन','ट्रांजैक्शंस', // Hindi
                 'స్టేట్మెంట్', 'లావాదేవీలు', 'చరిత్ర', // Telugu
                 'அறிக்கை', 'பரிவர்த்தனை', // Tamil
                 'स्टेटमेंट', 'व्यवहार' // Marathi
             ],
             credit_card: [
                 'credit card', 'credit', 'card limit',
-                'क्रेडिट कार्ड', 'कार्ड', // Hindi
+                'क्रेडिट कार्ड',  // Hindi
                 'క్రెడిట్ కార్డ్', 'కార్డ్', 'కార్డు', 'క్రెడిట్ కార్డు', // Telugu
                 'கிரெடிட் கார்டு', // Tamil
                 'क्रेडिट कार्ड' // Marathi
